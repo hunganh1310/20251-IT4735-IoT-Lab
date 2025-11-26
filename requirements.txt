@@ -1,0 +1,27 @@
+# IoT Lab - Python Dependencies
+# Course: 20251-IT-4735-IoT and Application - HUST
+
+# MQTT Protocol
+paho-mqtt>=1.6.1
+
+# HTTP Requests
+requests>=2.28.0
+
+# Message Queue (Kafka)
+kafka-python>=2.0.2
+
+# Data Processing
+pandas>=1.5.0
+
+# CSV handling (built-in, listed for reference)
+# csv - standard library
+
+# JSON handling (built-in, listed for reference)
+# json - standard library
+
+# Optional: For advanced IoT applications
+# python-dotenv>=1.0.0      # Environment variable management
+# aiohttp>=3.8.0            # Async HTTP client
+# asyncio-mqtt>=0.16.0      # Async MQTT client
+# influxdb-client>=1.36.0   # Time-series database
+# pyserial>=3.5             # Serial communication

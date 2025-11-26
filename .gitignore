@@ -1,0 +1,126 @@
+# ===========================
+# Python
+# ===========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# ===========================
+# PlatformIO
+# ===========================
+.pio/
+.pioenvs/
+.piolibdeps/
+.clang_complete
+.gcc-flags.json
+
+# ===========================
+# VS Code
+# ===========================
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# ===========================
+# Wokwi
+# ===========================
+# Keep wokwi.toml and diagram.json
+
+# ===========================
+# IDE and Editors
+# ===========================
+.idea/
+*.swp
+*.swo
+*~
+.project
+.cproject
+.settings/
+
+# ===========================
+# OS Generated Files
+# ===========================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ===========================
+# Build outputs
+# ===========================
+*.exe
+*.out
+*.app
+*.o
+*.obj
+*.elf
+*.bin
+*.hex
+*.map
+
+# ===========================
+# Logs and Databases
+# ===========================
+*.log
+*.sql
+*.sqlite
+*.db
+
+# ===========================
+# Temporary files
+# ===========================
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# ===========================
+# Credentials and Secrets
+# ===========================
+*.env
+.env.local
+.env.*.local
+secrets.json
+credentials.json
+config.local.json
+
+# Keep token.txt for reference but consider adding to .gitignore in production
+# token.txt
+
+# ===========================
+# Data files (optional - uncomment if needed)
+# ===========================
+# *.csv
+# *.json

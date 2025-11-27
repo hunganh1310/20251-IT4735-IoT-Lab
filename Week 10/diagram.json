@@ -1,91 +1,44 @@
 {
   "version": 1,
-  "author": "IOT Lab",
+  "author": "Hùng Anh",
   "editor": "wokwi",
   "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-dht22", "id": "dht1", "top": -143.7, "left": 196.2, "attrs": {} },
+    { "type": "wokwi-pir-motion-sensor", "id": "pir1", "top": -100, "left": 280, "attrs": {} },
     {
-      "type": "board-esp32-devkit-c-v4",
-      "id": "esp",
-      "top": 0,
-      "left": 0,
-      "attrs": {}
-    },
-    {
-      "type": "wokwi-led",
-      "id": "led1",
-      "top": -80,
-      "left": 100,
-      "attrs": { "color": "red" }
-    },
-    {
-      "type": "wokwi-led",
-      "id": "led2",
-      "top": -80,
+      "type": "wokwi-lcd1602",
+      "id": "lcd1",
+      "top": 73.6,
       "left": 140,
-      "attrs": { "color": "green" }
+      "attrs": { "pins": "i2c" }
     },
-    {
-      "type": "wokwi-led",
-      "id": "led3",
-      "top": -80,
-      "left": 180,
-      "attrs": { "color": "blue" }
-    },
+    { "type": "wokwi-led", "id": "led1", "top": -138, "left": 119, "attrs": { "color": "red" } },
     {
       "type": "wokwi-resistor",
       "id": "r1",
-      "top": -40,
-      "left": 96,
+      "top": -50,
+      "left": 115,
       "rotate": 90,
       "attrs": { "value": "220" }
-    },
-    {
-      "type": "wokwi-resistor",
-      "id": "r2",
-      "top": -40,
-      "left": 136,
-      "rotate": 90,
-      "attrs": { "value": "220" }
-    },
-    {
-      "type": "wokwi-resistor",
-      "id": "r3",
-      "top": -40,
-      "left": 176,
-      "rotate": 90,
-      "attrs": { "value": "220" }
-    },
-    {
-      "type": "wokwi-pushbutton",
-      "id": "btn1",
-      "top": 200,
-      "left": 100,
-      "attrs": { "color": "green" }
-    },
-    {
-      "type": "wokwi-dht22",
-      "id": "dht1",
-      "top": -100,
-      "left": 250,
-      "attrs": {}
     }
   ],
   "connections": [
     [ "esp:TX", "$serialMonitor:RX", "", [] ],
     [ "esp:RX", "$serialMonitor:TX", "", [] ],
-    [ "led1:A", "r1:2", "red", [] ],
-    [ "led2:A", "r2:2", "green", [] ],
-    [ "led3:A", "r3:2", "blue", [] ],
-    [ "r1:1", "esp:D2", "red", [] ],
-    [ "r2:1", "esp:D4", "green", [] ],
-    [ "r3:1", "esp:D5", "blue", [] ],
-    [ "led1:C", "esp:GND.1", "black", [] ],
-    [ "led2:C", "esp:GND.1", "black", [] ],
-    [ "led3:C", "esp:GND.1", "black", [] ],
-    [ "btn1:1.l", "esp:D15", "purple", [] ],
-    [ "btn1:2.l", "esp:GND.2", "black", [] ],
     [ "dht1:VCC", "esp:3V3", "red", [] ],
-    [ "dht1:GND", "esp:GND.3", "black", [] ],
-    [ "dht1:SDA", "esp:D13", "orange", [] ]
-  ]
+    [ "dht1:GND", "esp:GND.1", "black", [ "v48", "h-268.8", "v134.4" ] ],
+    [ "dht1:SDA", "esp:13", "orange", [ "v38.4", "h-278.3", "v153.6" ] ],
+    [ "pir1:VCC", "esp:3V3", "red", [] ],
+    [ "pir1:GND", "esp:GND.2", "black", [ "v36.8", "h-234.88" ] ],
+    [ "pir1:OUT", "esp:14", "green", [ "h-345.12", "v142.4" ] ],
+    [ "lcd1:GND", "esp:GND.3", "black", [ "h-28.8", "v-19.2" ] ],
+    [ "lcd1:VCC", "esp:5V", "red", [ "h-9.6", "v124.9", "h-129.79" ] ],
+    [ "lcd1:SDA", "esp:21", "blue", [ "h-19.2", "v-47.8" ] ],
+    [ "lcd1:SCL", "esp:22", "purple", [ "h-28.8", "v-86.1" ] ],
+    [ "led1:A", "r1:1", "red", [] ],
+    [ "r1:2", "esp:2", "red", [ "h-153.95", "v274.4", "h110.36" ] ],
+    [ "led1:C", "esp:GND.1", "black", [ "h-172.4", "v249.6" ] ]
+  ],
+  "dependencies": {}
 }

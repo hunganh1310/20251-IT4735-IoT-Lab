@@ -1,194 +1,164 @@
-/*
- * IOT Lab - Week 10: Wokwi Simulation Demo
- * 
- * Components:
- * - 3 LEDs (Red, Green, Blue) on GPIO 2, 4, 5
- * - Push button on GPIO 15
- * - DHT22 temperature/humidity sensor on GPIO 13
- * 
- * Features:
- * - LED chaser pattern
- * - Button to change LED mode
- * - Temperature & humidity reading
- * - Serial monitor interaction
- */
-
 #include <Arduino.h>
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
 #include <DHT.h>
 
 // Pin definitions
-#define LED_RED    2
-#define LED_GREEN  4
-#define LED_BLUE   5
-#define BUTTON_PIN 15
-#define DHT_PIN    13
-#define DHT_TYPE   DHT22
+#define DHT_PIN       13
+#define DHT_TYPE      DHT22
+#define PIR_PIN       14
+#define LED_PIN       2
 
-// Global variables
+// Ngưỡng nhiệt độ (°C) - LED sáng khi nhiệt độ vượt ngưỡng
+#define TEMP_THRESHOLD  30.0
+
+// Thời gian tắt đèn nền LCD sau khi không có chuyển động (ms)
+#define BACKLIGHT_TIMEOUT  10000
+
+// LCD I2C address (thường là 0x27 hoặc 0x3F)
+#define LCD_ADDRESS  0x27
+#define LCD_COLS     16
+#define LCD_ROWS     2
+
+// Objects
+LiquidCrystal_I2C lcd(LCD_ADDRESS, LCD_COLS, LCD_ROWS);
 DHT dht(DHT_PIN, DHT_TYPE);
-int currentMode = 0;
-int lastButtonState = HIGH;
-unsigned long lastDebounceTime = 0;
-unsigned long debounceDelay = 50;
+
+// Variables
 unsigned long lastSensorRead = 0;
-unsigned long sensorInterval = 2000;  // Read sensor every 2 seconds
+unsigned long sensorInterval = 2000;  // Đọc cảm biến mỗi 2 giây
+unsigned long lastMotionTime = 0;
+bool backlightOn = true;
+bool lastMotionState = false;
 
 void setup() {
   Serial.begin(115200);
-  Serial.println("\n=== IOT Lab Week 10 - Wokwi Demo ===");
-  Serial.println("Commands: 'r'=red, 'g'=green, 'b'=blue, 'a'=all, 'o'=off, 't'=temperature");
+  Serial.println("\n========================================");
+  Serial.println("  ESP32 + DHT22 + PIR + LCD + LED");
+  Serial.println("========================================");
+  Serial.print("Temperature threshold: ");
+  Serial.print(TEMP_THRESHOLD);
+  Serial.println(" C");
+  Serial.print("Backlight timeout: ");
+  Serial.print(BACKLIGHT_TIMEOUT / 1000);
+  Serial.println(" seconds");
+  Serial.println("----------------------------------------\n");
   
-  // Initialize LED pins
-  pinMode(LED_RED, OUTPUT);
-  pinMode(LED_GREEN, OUTPUT);
-  pinMode(LED_BLUE, OUTPUT);
+  // Khởi tạo chân
+  pinMode(PIR_PIN, INPUT);
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, LOW);
   
-  // Initialize button with internal pull-up
-  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  // Khởi tạo I2C
+  Wire.begin(21, 22);  // SDA=21, SCL=22
   
-  // Initialize DHT22 sensor
+  // Khởi tạo LCD
+  lcd.init();
+  lcd.backlight();
+  lcd.setCursor(0, 0);
+  lcd.print("Initializing...");
+  
+  // Khởi tạo DHT22
   dht.begin();
   
-  // Initial LED test - quick flash
-  digitalWrite(LED_RED, HIGH);
-  delay(200);
-  digitalWrite(LED_GREEN, HIGH);
-  delay(200);
-  digitalWrite(LED_BLUE, HIGH);
-  delay(200);
-  digitalWrite(LED_RED, LOW);
-  digitalWrite(LED_GREEN, LOW);
-  digitalWrite(LED_BLUE, LOW);
+  // Đợi cảm biến ổn định
+  delay(2000);
   
-  Serial.println("Setup complete! Press button to change mode.");
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("System Ready!");
+  Serial.println("System initialized successfully!\n");
+  
+  lastMotionTime = millis();
+  delay(1000);
+  lcd.clear();
 }
 
-void allLedsOff() {
-  digitalWrite(LED_RED, LOW);
-  digitalWrite(LED_GREEN, LOW);
-  digitalWrite(LED_BLUE, LOW);
-}
-
-void readTemperature() {
+void readAndDisplaySensor() {
   float temperature = dht.readTemperature();
   float humidity = dht.readHumidity();
   
   if (!isnan(temperature) && !isnan(humidity)) {
-    Serial.println("\n--- Sensor Reading ---");
-    Serial.print("Temperature: ");
-    Serial.print(temperature, 1);
-    Serial.println(" °C");
-    Serial.print("Humidity: ");
-    Serial.print(humidity, 1);
-    Serial.println(" %");
-    Serial.println("----------------------");
-  } else {
-    Serial.println("DHT22 sensor error!");
-  }
-}
-
-void handleSerialCommand() {
-  if (Serial.available() > 0) {
-    char cmd = Serial.read();
+    // Hiển thị lên LCD
+    lcd.setCursor(0, 0);
+    lcd.print("Temp: ");
+    lcd.print(temperature, 1);
+    lcd.print((char)223);  // Ký tự độ
+    lcd.print("C   ");
     
-    switch (cmd) {
-      case 'r':
-      case 'R':
-        allLedsOff();
-        digitalWrite(LED_RED, HIGH);
-        Serial.println("Red LED ON");
-        break;
-      case 'g':
-      case 'G':
-        allLedsOff();
-        digitalWrite(LED_GREEN, HIGH);
-        Serial.println("Green LED ON");
-        break;
-      case 'b':
-      case 'B':
-        allLedsOff();
-        digitalWrite(LED_BLUE, HIGH);
-        Serial.println("Blue LED ON");
-        break;
-      case 'a':
-      case 'A':
-        digitalWrite(LED_RED, HIGH);
-        digitalWrite(LED_GREEN, HIGH);
-        digitalWrite(LED_BLUE, HIGH);
-        Serial.println("All LEDs ON");
-        break;
-      case 'o':
-      case 'O':
-        allLedsOff();
-        Serial.println("All LEDs OFF");
-        break;
-      case 't':
-      case 'T':
-        readTemperature();
-        break;
-      default:
-        break;
+    lcd.setCursor(0, 1);
+    lcd.print("Hum:  ");
+    lcd.print(humidity, 1);
+    lcd.print("%   ");
+    
+    // Log qua Serial
+    Serial.print("[SENSOR] Temp: ");
+    Serial.print(temperature, 1);
+    Serial.print(" C | Humidity: ");
+    Serial.print(humidity, 1);
+    Serial.print("% | ");
+    
+    // Kiểm tra ngưỡng nhiệt độ và điều khiển LED
+    if (temperature > TEMP_THRESHOLD) {
+      digitalWrite(LED_PIN, HIGH);
+      Serial.print("LED: ON (Temp > ");
+      Serial.print(TEMP_THRESHOLD);
+      Serial.println(" C)");
+    } else {
+      digitalWrite(LED_PIN, LOW);
+      Serial.print("LED: OFF (Temp <= ");
+      Serial.print(TEMP_THRESHOLD);
+      Serial.println(" C)");
     }
+  } else {
+    lcd.setCursor(0, 0);
+    lcd.print("Sensor Error!   ");
+    lcd.setCursor(0, 1);
+    lcd.print("                ");
+    Serial.println("[ERROR] Failed to read DHT22 sensor!");
   }
 }
 
-void handleButton() {
-  int reading = digitalRead(BUTTON_PIN);
+void handleMotionSensor() {
+  bool motionDetected = digitalRead(PIR_PIN) == HIGH;
   
-  if (reading != lastButtonState) {
-    lastDebounceTime = millis();
-  }
-  
-  if ((millis() - lastDebounceTime) > debounceDelay) {
-    static int buttonState = HIGH;
-    if (reading != buttonState) {
-      buttonState = reading;
-      
-      if (buttonState == LOW) {  // Button pressed
-        currentMode = (currentMode + 1) % 5;
-        Serial.print("Mode changed to: ");
-        Serial.println(currentMode);
-        
-        allLedsOff();
-        switch (currentMode) {
-          case 0:
-            Serial.println("Mode 0: All OFF");
-            break;
-          case 1:
-            digitalWrite(LED_RED, HIGH);
-            Serial.println("Mode 1: Red");
-            break;
-          case 2:
-            digitalWrite(LED_GREEN, HIGH);
-            Serial.println("Mode 2: Green");
-            break;
-          case 3:
-            digitalWrite(LED_BLUE, HIGH);
-            Serial.println("Mode 3: Blue");
-            break;
-          case 4:
-            digitalWrite(LED_RED, HIGH);
-            digitalWrite(LED_GREEN, HIGH);
-            digitalWrite(LED_BLUE, HIGH);
-            Serial.println("Mode 4: All ON");
-            break;
-        }
-      }
+  if (motionDetected) {
+    lastMotionTime = millis();
+    
+    if (!backlightOn) {
+      lcd.backlight();
+      backlightOn = true;
+      Serial.println("[PIR] Motion detected! Backlight ON");
     }
-  }
-  lastButtonState = reading;
-}
-
-void autoReadSensor() {
-  if (millis() - lastSensorRead >= sensorInterval) {
-    lastSensorRead = millis();
-    readTemperature();
+    
+    if (!lastMotionState) {
+      Serial.println("[PIR] Motion detected!");
+      lastMotionState = true;
+    }
+  } else {
+    if (lastMotionState) {
+      Serial.println("[PIR] No motion");
+      lastMotionState = false;
+    }
+    
+    // Kiểm tra timeout để tắt đèn nền
+    if (backlightOn && (millis() - lastMotionTime >= BACKLIGHT_TIMEOUT)) {
+      lcd.noBacklight();
+      backlightOn = false;
+      Serial.println("[PIR] No motion for 10s. Backlight OFF");
+    }
   }
 }
 
 void loop() {
-  handleSerialCommand();
-  handleButton();
-  autoReadSensor();
-  delay(10);
+  // Xử lý cảm biến chuyển động
+  handleMotionSensor();
+  
+  // Đọc và hiển thị cảm biến định kỳ
+  if (millis() - lastSensorRead >= sensorInterval) {
+    lastSensorRead = millis();
+    readAndDisplaySensor();
+  }
+  
+  delay(100);
 }

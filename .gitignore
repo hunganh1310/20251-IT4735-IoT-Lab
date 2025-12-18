@@ -125,3 +125,5 @@ config.local.json
 # *.csv
 # *.json
 .vscode
+credentials
+access_token.txt
